@@ -1,17 +1,26 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
 
-	static int[][] graph = new int[4][4];
+	static Node[] nodes = new Node[4];
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		for (int i=0;i<4;i++) {
+			Node node = new Node(i);
+			nodes[i]=node;
+		}
+		
 		Scanner sc = new Scanner(System.in);
 		int paths=0;
 		for (int i=0;i<4;i++) {
 			for (int j=0;j<4;j++) {
-				graph[i][j] = sc.nextInt();
-				if (graph[i][j]==1)
+				int path = sc.nextInt();
+				if (path==1) {
 					paths++;
+					nodes[i].connectedNodes.add(nodes[j]);
+				}
 			}
 		}
 		
@@ -20,34 +29,66 @@ public class Main {
 			return;
 		}
 		
-		int root = 0;
-		int number=getNumberOfAllSubnodes(-1, 0);
+		int number = getSubtreeNodes(nodes[0]);
 		if (number == 4) {
 			System.out.println("Yes");
-		} 
-		else System.out.println("No");
-	}
-	
-	private static int getNumberOfAllSubnodes(int parent, int node) {
-		// get node count of all subtrees including node itself.
-		int count=0; // initialize count to 0;
-		graph[node][node]=1; // mark the node to be visited.
-		for (int i=0;i<4;i++) { // scan all other nodes;
-			if (i==node) continue; // if i is node itself, do nothing.
-			if (i==parent) continue; // if i is parent, do nothing.
-			if (graph[node][i]==0) continue; // if i is not connected with node, do nothing.
-			if (graph[i][i]==1) { // if i is visited, there must be a ring.
-				return -1;
-			}
-			
-			int subnodes=getNumberOfAllSubnodes(node, i); // recursively get number of nodes of i's subtrees.
-			if (subnodes==-1) { // if there is a ring in node's subtrees, return there is a ring.
-				return -1;
-			}
-			count+=subnodes; // sum up the subtrees' nodes.
+		} else {
+			System.out.println("No");
 		}
 		
-		return count+1; // count node itself.
+		
 	}
 
+	private static int getSubtreeNodes(Node node) {
+		// TODO Auto-generated method stub
+		ArrayList<Node> current = new ArrayList<Node>();
+		ArrayList<Node> next = new ArrayList<>();
+		
+		current.add(node);
+		int count=0;
+		while (!current.isEmpty()) {
+			for (Node n:current) {
+				n.visited=true;
+				count++;
+				ArrayList<Node> children = n.getChildren();
+				if (children==null) return -1;
+				next.addAll(children);
+			}
+			
+			current = next;
+			next=new ArrayList<>();
+		}
+		
+		return count;
+	}
+	
+	
+
+}
+
+class Node {
+	int id;
+	Node parent=null;
+	boolean visited = false;
+	ArrayList<Node> connectedNodes=new ArrayList<>();
+	
+	public Node(int id) {
+		this.id = id;
+	}
+	
+	public ArrayList<Node> getChildren() {
+		ArrayList<Node> children = new ArrayList<>();
+		
+		for (Node child:connectedNodes) {
+			if (child!=parent) {
+				if (child.visited) {
+					return null;
+				}
+				
+				children.add(child);
+				child.parent=this;
+			}
+		}
+		return children;
+	}
 }
